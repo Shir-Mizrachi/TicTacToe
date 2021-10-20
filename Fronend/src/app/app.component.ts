@@ -17,13 +17,26 @@ export class AppComponent {
   socket: WebSocket = new WebSocket('ws:/127.0.0.1:5050/');
 
   constructor() {
-    this.socket.onmessage = this.handleMassage;
+    this.socket.onmessage = this.handleMassage.bind(this);
   }
 
-  handleMassage(event: any) {
+  isBoardFill(): boolean {
+    return this.board.every(position => position !== '');
+  }
+  
+  handleMassage(event: MessageEvent) {
 
     if(this.isBoardFill()) {
       this.state = 'Draw!';
+    }
+
+    console.log('shir enter to handle massage');
+    
+    console.log(event);
+    if(event.data === 'X' || event.data ==='O') {
+      console.log('enter to here!');
+        
+        this.sign = event.data;
     }
 
     switch(event.data) {
@@ -43,9 +56,11 @@ export class AppComponent {
         this.state = 'waiting for another player';
         break;
       
-      case serverMessage.sign:
-        this.sign = event.data;
-        break;
+      // case serverMessage.sign:
+      //   console.log('enter to here!');
+        
+      //   this.sign = event.data;
+      //   break;
 
       default:
         const position = event.data;
@@ -53,14 +68,16 @@ export class AppComponent {
     }
   }
 
-  isBoardFill(): boolean {
-    return this.board.every(position => position !== '');
-  }
     getOtherSign() {
       if(this.sign === 'X') {
         return 'O'
       }
       return 'X';
     }
+
+    sendPosition(position: number) {
+        this.socket.send(position.toString());
+    }
   }
+
 

@@ -24,29 +24,30 @@ class MatchManager {
     }
 
     startGame() {
-        setOnMessage(this.player1Info);
-        setOnMessage(this.player2Info);
-        setOnClose(this.player1Info);
-        setOnClose(this.player2Info);
+        this.setOnMessage(this.player1Info);
+        this.setOnMessage(this.player2Info);
+        this.setOnClose(this.player1Info);
+        this.setOnClose(this.player2Info);
     }
 
-    setOnMessage(player) {
-        player.socket.on('message', (data) => {
-            const isWinner = player.checkMove(data.position);
-            returnOther(player).socket.send(data.position);
+    setOnMessage(playerInfo) {
+        playerInfo.socket.on('message', (data) => {
+            console.log(data);
+            const isWinner = playerInfo.player.checkMove(parseInt(data));
+            this.returnOther(playerInfo).socket.send(data);
             
             if(isWinner) {
-                player.socket.send('you won!');
-                returnOther(player).socket.send('you lost!');
+                playerInfo.socket.send('you won!');
+                this.returnOther(playerInfo).socket.send('you lost!');
 
                 this.endGame(player);
             }   
         })
     }
 
-    setOnClose(player) {
-        player.socket.on('close', () => {
-            returnOther(player).socket.send('Your opponent disconnected, you win!');
+    setOnClose(playerInfo) {
+        playerInfo.socket.on('close', () => {
+            this.returnOther(playerInfo).socket.send('Your opponent disconnected, you win!');
         })
     }
 

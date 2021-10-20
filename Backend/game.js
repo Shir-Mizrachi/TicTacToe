@@ -15,6 +15,10 @@ function SetGame(port) {
     ws.on('error', (e) => {
         console.log(e);
     });
+
+    ws.on('message', (msg) => {
+        console.log(msg);
+    })
 }
 
 module.exports.SetGame = SetGame;

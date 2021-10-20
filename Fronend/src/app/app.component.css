@@ -1,0 +1,22 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    font-family: 'Roboto', serif;
+    background-color: #fdfdfd;
+}
+
+#board {
+    border-collapse: collapse;
+}
+
+.cell {
+    text-align: center;
+    border: 1px solid #000;
+    width: 150px;
+    height: 150px;
+    font-size: 6em;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

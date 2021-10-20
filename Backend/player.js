@@ -11,12 +11,13 @@ class Player {
     positions = new Array(9).fill(null);
 
     checkMove(position) {
+        console.log(position);
         this.positions[position] = this.selected;
         return this.isWinner();
     }
 
     isWinner() {
-        return this.winStates.some(state =>(
+        return winStates.some(state =>(
             state.every((index => this.positions[index] === this.selected))
         ))
     }

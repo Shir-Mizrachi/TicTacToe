@@ -2,20 +2,21 @@
 <h1>Welcome to tic-tac-toe game!</h1>
 
 <table id="board">
+    
     <tr>
-        <td id="0" class="cell">{{board[0]}} </td>
-        <td id="1" class="cell">{{board[1]}}</td>
-        <td id="2" class="cell">{{board[2]}}</td>
+        <td id="0" class="cell" (click)="sendPosition(0)">{{board[0]}} </td>
+        <td id="1" class="cell" (click)="sendPosition(1)">{{board[1]}}</td>
+        <td id="2" class="cell" (click)="sendPosition(2)">{{board[2]}}</td>
     </tr>
     <tr>
-        <td id="3" class="cell">{{board[3]}}</td>
-        <td id="4" class="cell">{{board[4]}}</td>
-        <td id="5" class="cell">{{board[5]}}</td>
+        <td id="3" class="cell" (click)="sendPosition(3)">{{board[3]}}</td>
+        <td id="4" class="cell" (click)="sendPosition(4)">{{board[4]}}</td>
+        <td id="5" class="cell" (click)="sendPosition(05)">{{board[5]}}</td>
     </tr>
     <tr>
-        <td id="6" class="cell">{{board[6]}}</td>
-        <td id="7" class="cell">{{board[7]}}</td>
-        <td id="8" class="cell">{{board[8]}}</td>
+        <td id="6" class="cell" (click)="sendPosition(6)">{{board[6]}}</td>
+        <td id="7" class="cell" (click)="sendPosition(7)">{{board[7]}}</td>
+        <td id="8" class="cell" (click)="sendPosition(8)">{{board[8]}}</td>
     </tr>
 </table>
 
