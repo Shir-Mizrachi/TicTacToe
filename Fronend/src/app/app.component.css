@@ -2,11 +2,12 @@ html, body {
     margin: 0;
     height: 100%;
     font-family: 'Roboto', serif;
-    background-color: #fdfdfd;
+    background-color: #fcfcfc;
 }
 
 #board {
     border-collapse: collapse;
+    margin: auto;
 }
 
 .cell {
@@ -14,9 +15,24 @@ html, body {
     border: 1px solid #000;
     width: 150px;
     height: 150px;
-    font-size: 6em;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    font-size: 7em;
+    font-family: sans-serif;
+}
+
+h1{
+    font-family: cursive;
+    font-size: 47px;
+    text-align: center;
+}
+
+h2{
+    font-family: cursive;
+    font-size: 30px;
+    text-align: center;
+}
+
+p {
+    text-align: center;
+    font-size: 21px;
+    font-family: fantasy;
 }

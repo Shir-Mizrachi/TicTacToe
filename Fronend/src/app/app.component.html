@@ -1,6 +1,6 @@
 
-<h1>Welcome to tic-tac-toe game!</h1>
-
+<h1>Welcome To Tic-Tac-Toe Game!</h1>
+<h2>Your Symbol is: {{sign}}</h2>
 <table id="board">
     
     <tr>
@@ -11,7 +11,7 @@
     <tr>
         <td id="3" class="cell" (click)="sendPosition(3)">{{board[3]}}</td>
         <td id="4" class="cell" (click)="sendPosition(4)">{{board[4]}}</td>
-        <td id="5" class="cell" (click)="sendPosition(05)">{{board[5]}}</td>
+        <td id="5" class="cell" (click)="sendPosition(5)">{{board[5]}}</td>
     </tr>
     <tr>
         <td id="6" class="cell" (click)="sendPosition(6)">{{board[6]}}</td>
@@ -21,3 +21,7 @@
 </table>
 
 <p>{{state}}</p>
+
+<p *ngIf="isMyTurn">Its your turn</p>
+<p *ngIf="isMyTurn === false">Opponents Turn</p>
+

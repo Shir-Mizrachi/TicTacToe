@@ -1,5 +1,5 @@
 
-const Game = require('./game');
+const Game = require('./src/game')
 
 try {
     Game.SetGame(5050);

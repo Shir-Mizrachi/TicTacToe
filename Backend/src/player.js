@@ -6,12 +6,19 @@ const winStates = [
 ]
 
 
+/**
+ * This calss responsiable on store the data on the player.
+ */
 class Player {
     selected = 1    
     positions = new Array(9).fill(null);
+    sign;
+
+    constructor(sign) {
+        this.sign = sign;
+    }
 
     checkMove(position) {
-        console.log(position);
         this.positions[position] = this.selected;
         return this.isWinner();
     }

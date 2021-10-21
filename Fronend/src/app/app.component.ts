@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { serverMessage } from './utilities';
+import { messageOnState } from './utilities';
 
 @Component({
   selector: 'app-root',
@@ -7,76 +7,74 @@ import { serverMessage } from './utilities';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+
   title = 'client-app';
+  socket: WebSocket = new WebSocket('ws:/127.0.0.1:5050/');
 
   state: string = '';
-  
   board = new Array(9).fill('');
   sign: string | undefined;
-  
-  socket: WebSocket = new WebSocket('ws:/127.0.0.1:5050/');
+  isMyTurn: boolean | undefined = undefined;
 
   constructor() {
     this.socket.onmessage = this.handleMassage.bind(this);
   }
 
-  isBoardFill(): boolean {
-    return this.board.every(position => position !== '');
+
+  handleState(data: {state:string, yourTurn: boolean}) {
+    switch(data.state) {
+    
+      case messageOnState.start:
+        this.isMyTurn = data.yourTurn;
+        this.state ='';
+        break;
+
+      case messageOnState.win:
+        this.state = 'You won!';
+        this.isMyTurn = undefined;
+        break;
+
+      case messageOnState.lost:
+        this.state = 'You lost!';
+        this.isMyTurn = undefined;
+        break;
+      
+      case messageOnState.draw:
+        this.state = 'Draw'
+        this.isMyTurn = undefined;
+        break;
+
+      case messageOnState.oponentLeft:
+        this.state = 'Your opponent disconnected, you win!';
+        this.isMyTurn = undefined;
+        break;
+
+      case messageOnState.waiting:
+        this.state = 'Waiting for another player';
+        break;
+    }
   }
   
   handleMassage(event: MessageEvent) {
-
-    if(this.isBoardFill()) {
-      this.state = 'Draw!';
-    }
-
-    console.log('shir enter to handle massage');
+ 
+    const data = JSON.parse(event.data);
     
-    console.log(event);
-    if(event.data === 'X' || event.data ==='O') {
-      console.log('enter to here!');
-        
-        this.sign = event.data;
-    }
-
-    switch(event.data) {
-      case serverMessage.win:
-        this.state = 'You won!';
-        break;
-
-      case serverMessage.lost:
-        this.state = 'You lost!';
-        break;
-
-      case serverMessage.oponentLeft:
-        this.state = 'Your opponent disconnected, you win!';
-        break;
-
-      case serverMessage.firstPlayer:
-        this.state = 'waiting for another player';
-        break;
-      
-      // case serverMessage.sign:
-      //   console.log('enter to here!');
-        
-      //   this.sign = event.data;
-      //   break;
-
-      default:
-        const position = event.data;
-        this.board[position] = this.getOtherSign();
-    }
-  }
-
-    getOtherSign() {
-      if(this.sign === 'X') {
-        return 'O'
+    if(data.state) {
+      this.handleState(data);
+    } else if(data.position !== undefined) {
+        this.isMyTurn = true;
+        this.board[data.position] = data.sign;
+      } else {
+        this.sign = data.sign
       }
-      return 'X';
     }
 
     sendPosition(position: number) {
-        this.socket.send(position.toString());
+      if(this.isMyTurn && this.board[position] === '') {
+        this.board[position] = this.sign;
+        this.isMyTurn = false;
+        this.socket.send(JSON.stringify({position}));
+      }
     }
   }
 
