@@ -8,10 +8,8 @@ function SetGame(port) {
     });
 
     websocketServer.on('connection', (ws) => {
-        console.log('new connection!');
         ws.send(JSON.stringify({connect: true}))
         ws.on('message', (msg) => {
-            console.log('msg', JSON.parse(msg));
             matchModule.matchManager.handleMessgae(JSON.parse(msg), ws);
         });
     }); 
@@ -19,10 +17,6 @@ function SetGame(port) {
     websocketServer.on('error', (e) => {
         console.log(e);
     });
-
-    
-
-
 }
 
 module.exports.SetGame = SetGame;

@@ -16,13 +16,10 @@ export class AppComponent {
   isMyTurn: boolean | undefined = undefined;
   
   constructor() {
-    console.log('enter');
     this.socket.onmessage = this.handleMassage.bind(this);
   }
   
   handleState(data: {state:string, yourTurn: boolean, id?: number, sign?: string}) {
-    console.log(data.state);
-    
     switch(data.state) {
       case messageOnState.start:
         this.isMyTurn = data.yourTurn;
@@ -50,7 +47,6 @@ export class AppComponent {
         break;
 
       case messageOnState.waiting:
-        console.log('waiting');
         this.state = 'Waiting for another player';
         this.sign = data.sign;
         if(data.id) {
@@ -62,7 +58,6 @@ export class AppComponent {
   
   handleMassage(event: MessageEvent) {
     const data = JSON.parse(event.data);
-    console.log(data);
 
     if(data.connect) {
       let stringID = localStorage.getItem('id');
@@ -78,8 +73,6 @@ export class AppComponent {
 
     switch(data) {
       case data.state != undefined:
-        console.log('enter case');
-        
         this.handleState(data);
         break;
       case data.positions != undefined: 
@@ -88,7 +81,6 @@ export class AppComponent {
         break;
       case data.id != undefined:
         localStorage.set('id', data.id.tostring());
-        console.log(localStorage);
         break;
       case data.position != undefined:
         this.isMyTurn = true;
