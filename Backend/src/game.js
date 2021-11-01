@@ -1,24 +1,28 @@
 
-const matchmodule = require('./matchManager');
+const matchModule = require('./matchManager');
 const WebSocket = require('ws');
 
 function SetGame(port) {
-    const ws = new WebSocket.WebSocketServer({port}, () => {
+    const websocketServer = new WebSocket.WebSocketServer({port}, () => {
         console.log('server is created');
     });
 
-    ws.on('connection', (ws) => {
+    websocketServer.on('connection', (ws) => {
         console.log('new connection!');
-        matchmodule.matchManager.addPlayer(ws);        
+        ws.send(JSON.stringify({connect: true}))
+        ws.on('message', (msg) => {
+            console.log('msg', JSON.parse(msg));
+            matchModule.matchManager.handleMessgae(JSON.parse(msg), ws);
+        });
     }); 
 
-    ws.on('error', (e) => {
+    websocketServer.on('error', (e) => {
         console.log(e);
     });
 
-    ws.on('message', (msg) => {
-        console.log(msg);
-    })
+    
+
+
 }
 
 module.exports.SetGame = SetGame;

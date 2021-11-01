@@ -8,100 +8,159 @@ const Player = require('./player');
 
 class MatchManager {
     boardPositions = new Array(9).fill(null);
-    player1Info;
-    player2Info;
+    games = [];
 
-    replay;
+    handleMessgae(msg, socket) {
+        if(msg.id) {
+            if(msg.id > -1) {
+                this.handleMessgaeWithId(msg.id, socket);
+                return ;
+            } 
+            this.addPlayer(socket);
+        }
+    }
 
+    handleMessgaeWithId(id, socket) {
+        const player = this.getPlayerById(id);
+        resetSocket(player, socket);
+        this.send(socket, {
+            positions: this.getAllPositions(game),
+            sign: player.sign,
+        });
+    }
+
+    getPlayerById(id) {
+        return this.games.find(game => {
+            if(game.player1.id === id) {
+                return game.player1;
+            }
+            if(game.player2.id === id) {
+                return game.player2;
+            }
+        })[0];
+    }
+
+    resetSocket(player, socket) {
+        this.games.map(game => {
+            if(game.player1 === player) {
+                game.player1.socket = socket;
+                this.setOnMessage(game.player1)
+            } else if(game.player2 === player) {
+                game.player2.socket = socket;
+                this.setOnMessage(game.player2)
+            }
+        })   
+    }
+
+    
     // Create the players
     addPlayer(socket) {
-        if(this.player1Info) {
-            this.player2Enter(socket);
+        let player;
+        let lastGame = this.games[this.games.length -1];
+        if(!lastGame || lastGame.player2) {
+            player = this.player1Enter(socket);
+            const game = {
+                player1: player
+            };
+            this.games.push(game);
         } else {
-            this.firstPlayerEnter(socket);
+            player = this.plater2Enter(socket, lastGame);
         }
+        return player;
     }
 
-    //There is 2 players connected.
-    player2Enter(socket) {
-        this.player2Info = {
-            socket,
-            player: new Player('X')
-        }
+    player1Enter(socket) {
+        const sign = 'O';
+        const player = new Player(sign, socket);
+       
+        this.send(socket, {state: 'waiting', id: player.id, sign});
+        return player;
+    }
 
-        const response = {sign: this.player2Info.player.sign};
+    plater2Enter(socket, game) {
+        const sign = 'X';
+        game.player2 = new Player(sign, socket);       
+        const response = {sign, id: game.player2.id};
         this.send(socket, response)
-
-        this.startGame();
+        this.startGame(game);
+        return game.player2;
     }
 
-    // There is only one connection, waiting to another.
-    firstPlayerEnter(socket) {
-        this.player1Info = {
-            socket,
-            player: new Player('O')
-        }
-
-        const response = {sign: this.player1Info.player.sign};
-        this.send(socket, response)
-
-        this.send(socket, {state: 'waiting'});
-    }
-
-    startGame() { 
-         let yourTurn = true;
-        [this.player1Info, this.player2Info].map(player => {
+    startGame(game) { 
+        let yourTurn = true;
+        [game.player1, game.player2].map(player => {
             this.send(player.socket, {state:'start', yourTurn});
             yourTurn = false;
             this.setOnMessage(player);
-            this.setOnClose(player);
         })   
     
     }
 
     setOnMessage(currentPlayer) {
-        // All the message from the server is : {position: number} with JSON format.
         currentPlayer.socket.on('message', (msg) => {
+            msg = JSON.parse(msg);
+             if(msg.disconnectdState) {
+                this.handleDisconneted(Boolean(msg.disconnectdState));
+            } else {
+                const otherPlayer = this.returnOther(currentPlayer);
 
-            const otherPlayer = this.returnOther(currentPlayer);
+                const position = parseInt(msg.position);
+                this.boardPositions[position] = currentPlayer.player.sign; 
+        
+                const isWinner = currentPlayer.player.checkMove(position);
 
-            const position = parseInt(JSON.parse(msg).position);
-            this.boardPositions[position] = currentPlayer.player.sign; 
-    
-            const isWinner = currentPlayer.player.checkMove(position);
-
-            const response = {sign: currentPlayer.player.sign, position};
-            this.send(otherPlayer.socket, response)
-                        
-            if(isWinner) {
-                this.endGameMessage(currentPlayer.socket, otherPlayer.socket, 'you won');
-            } else if(this.isBoardFill()) {
-                this.endGameMessage(currentPlayer.socket, otherPlayer.socket, 'draw');
+                const response = {sign: currentPlayer.player.sign, position};
+                this.send(otherPlayer.socket, response)
+                            
+                if(isWinner) {
+                    this.endGameMessage(currentPlayer.socket, otherPlayer.socket, 'you won');
+                } else if(this.isBoardFill()) {
+                    this.endGameMessage(currentPlayer.socket, otherPlayer.socket, 'draw');
+                }
             }  
         })
     }
 
-    setOnClose(currentPlayer) {
-        currentPlayer.socket.on('close', () => {
-            this.send(this.returnOther(currentPlayer).socket, {state:'Your opponent disconnected, you win!'});
+    handleDisconneted(state) {
+        if(state) {
+            this.send(this.returnOther(game, currentPlayer).socket, {state:'Your opponent disconnected, you win!'});
             this.endGame();
+        }
+    }
+
+    getAllPositions(game) {
+        const postions = [];
+        [game.player1, game.player2].map(player => {
+            for(let i = 0; i < player.positions.length; i++) {
+                if(player.positions[i]) {
+                    position[i] = player.sign;
+                }
+            }
         })
+        return postions;
     }
 
     returnOther(player) {
-        if(this.player1Info.socket === player.socket) {
-            return this.player2Info;
+        const game = this.games.find(game => {
+            if(game.player1.id === player.id || game.player2.id === player.id) {
+                return game;
+            }
+        })[0]
+
+        if(game.player2.id === player.id) {
+            return game.player1;
         }
-        return this.player1Info;
+        return game.player2;
     }
 
     isBoardFill() {
         return this.boardPositions.every(position => position !== null);
       }
 
-    endGame() {
-        this.player1Info = undefined;
-        this.player2Info = undefined;
+    endGame(game) {
+        // Remove the game from the players array
+        const index = this.games.indexOf(game);
+        this.games.splice(index, 1);
     }
 
     endGameMessage(currentSocket, otherSocket, message) {
