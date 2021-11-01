@@ -7,10 +7,10 @@ function SetGame(port) {
         console.log('server is created');
     });
 
-    websocketServer.on('connection', (ws) => {
-        ws.send(JSON.stringify({connect: true}))
-        ws.on('message', (msg) => {
-            matchModule.matchManager.handleMessgae(JSON.parse(msg), ws);
+    websocketServer.on('connection', (connection) => {
+        connection.send(JSON.stringify({connect: true}));
+        connection.on('message', (msg) => {
+            matchModule.matchManager.handleMessgae(JSON.parse(msg), connection);
         });
     }); 
 

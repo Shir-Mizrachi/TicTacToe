@@ -6,6 +6,7 @@ import { messageOnState } from './utilities';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
+
 export class AppComponent {
 
   title = 'client-app';
@@ -68,21 +69,21 @@ export class AppComponent {
         id = parseInt(stringID)
       }
   
-      this.socket.send(JSON.stringify({id})); //Localstorage
+      this.socket.send(JSON.stringify({id}));
     }
 
-    switch(data) {
-      case data.state != undefined:
+    switch(true) {
+      case data.state:
         this.handleState(data);
         break;
-      case data.positions != undefined: 
+      case data.positions: 
         this.board = data.positions;
         this.sign = data.sign;
         break;
       case data.id != undefined:
-        localStorage.set('id', data.id.tostring());
+        localStorage.setItem('id', data.id.tostring());
         break;
-      case data.position != undefined:
+      case data.position:
         this.isMyTurn = true;
         this.board[data.position] = data.sign;
         break;
