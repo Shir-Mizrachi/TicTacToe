@@ -1,5 +1,6 @@
+import { ThrowStmt } from '@angular/compiler';
 import { Component, HostListener, OnInit } from '@angular/core';
-import { messageOnState } from './utilities';
+import { messageOnState, messageType } from './utilities';
 
 @Component({
   selector: 'app-root',
@@ -51,7 +52,7 @@ export class AppComponent {
         this.state = 'Waiting for another player';
         this.sign = data.sign;
         if(data.id) {
-          localStorage.setItem('id', data.id.toString())
+          sessionStorage.setItem('id', data.id.toString())
         }
         break;
     }
@@ -59,40 +60,45 @@ export class AppComponent {
   
   handleMassage(event: MessageEvent) {
     const data = JSON.parse(event.data);
+    const type: messageType = data.type;
+    console.log('date: ', data);
+    switch(type) {
+      case messageType.connect:
+        let stringID = sessionStorage.getItem('id');
+        let id = stringID === null ? -1 : parseInt(stringID);
+        console.log('ID: ', id );
+        this.socket.send(JSON.stringify({id}));
+        break;
 
-    if(data.connect) {
-      let stringID = localStorage.getItem('id');
-      let id;
-      if(stringID === null) {
-        id = -1;
-      } else {
-        id = parseInt(stringID)
-      }
-  
-      this.socket.send(JSON.stringify({id}));
-    }
-
-    switch(true) {
-      case data.state:
+      case messageType.state:
         this.handleState(data);
         break;
-      case data.positions: 
+
+      case messageType.playerData: 
         this.board = data.positions;
         this.sign = data.sign;
+        this.isMyTurn = data.myTurn;
         break;
-      case data.id != undefined:
-        localStorage.setItem('id', data.id.tostring());
+
+      case messageType.id:
+        sessionStorage.setItem('id', data.id.tostring());
         break;
-      case data.position:
+
+      case messageType.setPosition:
         this.isMyTurn = true;
         this.board[data.position] = data.sign;
         break;
-      default:
-        this.sign = data.sign
+
+      case messageType.setSign:
+        this.sign = data.sign;
+        if(data.id) {
+          sessionStorage.setItem('id', data.id.toString());
+        }
     }
   }
 
     sendPosition(position: number) {
+      console.log(this.isMyTurn, position);
       if(this.isMyTurn && this.board[position] === '') {
         this.board[position] = this.sign;
         this.isMyTurn = false;

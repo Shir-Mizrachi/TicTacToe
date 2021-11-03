@@ -7,3 +7,12 @@ export const messageOnState = {
     start:'start',
     draw: 'draw'
 }
+
+export enum messageType {
+    connect,
+    state,
+    playerData,
+    id,
+    setPosition, 
+    setSign
+}

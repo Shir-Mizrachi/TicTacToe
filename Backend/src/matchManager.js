@@ -1,6 +1,5 @@
-const Player = require('./player');
-
-
+const Player = require('./player')
+const messageType = require('./utilities')
 /**
  * This class is responsible for creating the players,
  * communicating with the client's about the players' state.
@@ -11,6 +10,7 @@ class MatchManager {
     games = [];
 
     handleMessgae(msg, socket) {
+        console.log('msg: ', msg);
         if(msg.id) {
             if(msg.id > -1) {
                 this.handleMessgaeWithId(msg.id, socket);
@@ -25,19 +25,25 @@ class MatchManager {
         player.changeSocket(socket);
         this.setOnMessage(player);
         this.send(socket, {
+            type: messageType.playerData,
             positions: this.getAllPositions(player),
             sign: player.sign,
+            myTurn: player.myTurn
         });
     }
 
     getPlayerById(id) {
-        return this.games.find(game => {
+        let player;
+        for(let game of this.games) {
             if(game.player1.id === id) {
-                return game.player1;
+                player = game.player1;
+                break;
             } else if(game.player2.id === id) {
-                return game.player2;
+                player = game.player2;
+                break;
             }
-        })[0];
+        }
+        return player;
     }
 
     // Create the players
@@ -58,16 +64,24 @@ class MatchManager {
 
     player1Enter(socket) {
         const sign = 'O';
-        const player = new Player(sign, socket);
+        const player = new Player.Player(sign, socket, true);
        
-        this.send(socket, {state: 'waiting', id: player.id, sign});
+        this.send(socket, {
+            type: messageType.state,
+            state: 'waiting', 
+            id: player.id, sign
+        });
         return player;
     }
 
     plater2Enter(socket, game) {
         const sign = 'X';
-        game.player2 = new Player(sign, socket);       
-        const response = {sign, id: game.player2.id};
+        game.player2 = new Player.Player(sign, socket, false);       
+        const response = {
+            type: messageType.setSign,
+            sign,
+            id: game.player2.id
+        };
         this.send(socket, response)
         this.startGame(game);
         return game.player2;
@@ -76,15 +90,22 @@ class MatchManager {
     startGame(game) { 
         let yourTurn = true;
         [game.player1, game.player2].map(player => {
-            this.send(player.socket, {state:'start', yourTurn});
+            this.send(player.socket, {
+                type: messageType.state,
+                state:'start',
+                yourTurn
+            });
             yourTurn = false;
             this.setOnMessage(player);
         })   
     }
 
     setOnMessage(currentPlayer) {
-        eventEmitter.on('disconnected', ()=> {
-            this.send(this.returnOther(game, currentPlayer).socket, {state:'Your opponent disconnected, you win!'});
+        Player.eventEmitter.on('disconnected', ()=> {
+            this.send(this.returnOther(currentPlayer).socket, {
+                type: messageType.state,
+                state:'Your opponent disconnected, you win!'
+            });
             this.endGame();
         })
 
@@ -94,11 +115,16 @@ class MatchManager {
             const otherPlayer = this.returnOther(currentPlayer);
 
             const position = parseInt(msg.position);
-            this.boardPositions[position] = currentPlayer.player.sign; 
-    
-            const isWinner = currentPlayer.player.checkMove(position);
+            this.boardPositions[position] = currentPlayer.sign; 
+            otherPlayer.myTurn = true;
+            currentPlayer.myTurn = false;
+            const isWinner = currentPlayer.checkMove(position);
 
-            const response = {sign: currentPlayer.player.sign, position};
+            const response = {
+                type: messageType.setPosition,
+                sign: currentPlayer.sign,
+                position
+            };
             this.send(otherPlayer.socket, response)
                         
             if(isWinner) {
@@ -110,9 +136,9 @@ class MatchManager {
         })
     }
 
-    getAllPositions(game) {
-        const postions = [];
-        [game.player1, game.player2].map(player => {
+    getAllPositions(currentPlayer) {
+        const postions = [];   
+        [currentPlayer, this.returnOther(currentPlayer)].map(player => {
             for(let i = 0; i < player.positions.length; i++) {
                 if(player.positions[i]) {
                     postions[i] = player.sign;
@@ -124,10 +150,10 @@ class MatchManager {
 
     returnOther(player) {
         const game = this.games.find(game => {
-            if(game.player1.id === player.id || game.player2.id === player.id) {
-                return game;
-            }
-        })[0]
+            return game.player1.id === player.id || game.player2.id === player.id     
+        })
+        console.log(this.games);
+        console.log('player: ', player);
 
         if(game.player2.id === player.id) {
             return game.player1;
@@ -153,8 +179,14 @@ class MatchManager {
         } else {
             otherMessage = message;
         }
-        this.send(currentSocket, {state: message});
-        this.send(otherSocket, {state: otherMessage});
+        this.send(currentSocket, {
+            type: messageType.state,
+            state: message
+        });
+        this.send(otherSocket, {
+            type: messageType.state,
+            state: otherMessage
+        });
 
         this.endGame();
     }

@@ -1,6 +1,7 @@
 
 const matchModule = require('./matchManager');
 const WebSocket = require('ws');
+const messageType = require('./utilities');
 
 function SetGame(port) {
     const websocketServer = new WebSocket.WebSocketServer({port}, () => {
@@ -8,7 +9,10 @@ function SetGame(port) {
     });
 
     websocketServer.on('connection', (connection) => {
-        connection.send(JSON.stringify({connect: true}));
+        connection.send(JSON.stringify({
+            type: messageType.connect,
+            connect: true
+        }));
         connection.on('message', (msg) => {
             matchModule.matchManager.handleMessgae(JSON.parse(msg), connection);
         });
